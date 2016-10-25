@@ -1,0 +1,219 @@
+---
+swagger: "2.0"
+info:
+  description: "Dispatch Emails to providers"
+  version: "1.0.0"
+  title: "DispatcherEMAIL"
+host: "dispatcher.umn.com"
+basePath: "/v1"
+schemes:
+- "https"
+produces:
+- "application/json"
+paths:
+  /emails:
+    post:
+      tags:
+      - "EMAIL"
+      summary: "Dispatch one email to one destination"
+      description: "Dispatcher un email sur UMN pour qu'il soit traité et envoyé au\
+        \ serveur mail.\n"
+      operationId: "emailsPOST"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "email"
+        description: "Email à dispatcher\n"
+        required: true
+        schema:
+          $ref: "#/definitions/Email"
+      responses:
+        200:
+          description: "Email reçu"
+          schema:
+            $ref: "#/definitions/Response"
+        400:
+          description: "Requête non valide"
+          schema:
+            $ref: "#/definitions/Error"
+        401:
+          description: "Non autorisé"
+          schema:
+            $ref: "#/definitions/Error"
+        403:
+          description: "Authentifié, mais droit refusé"
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          description: "Ressource non trouvée"
+          schema:
+            $ref: "#/definitions/Error"
+        405:
+          description: "Méthode non autorisée"
+          schema:
+            $ref: "#/definitions/Error"
+        500:
+          description: "Erreur interne (dans le code)"
+          schema:
+            $ref: "#/definitions/Error"
+        503:
+          description: "Service indisponible"
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "EMAIL"
+  /emails-bulk:
+    post:
+      tags:
+      - "EMAILS"
+      summary: "Dispatch one email to many destinations"
+      description: "Dispatcher un email sur UMN pour qu'il soit traité et envoyé au\
+        \ serveur mail.\n"
+      operationId: "emails_bulkPOST"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "email_bulk"
+        description: "Emails à dispatcher\n"
+        required: true
+        schema:
+          $ref: "#/definitions/EmailBulk"
+      responses:
+        200:
+          description: "Emails reçus"
+          schema:
+            $ref: "#/definitions/Response"
+        400:
+          description: "Requête non valide"
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "EMAILS"
+definitions:
+  Response:
+    type: "array"
+    items:
+      $ref: "#/definitions/ResponseElt"
+  ResponseElt:
+    type: "object"
+    required:
+    - "address_email"
+    - "id_email"
+    properties:
+      id_email:
+        type: "string"
+        description: "le code du message de la réponse\n"
+      address_email:
+        type: "string"
+        description: "l'addresse du destinataire\n"
+  Error:
+    type: "object"
+    required:
+    - "message"
+    - "status"
+    properties:
+      status:
+        $ref: "#/definitions/StatusMessages"
+      message:
+        type: "string"
+        description: "le message d'erreur\n"
+  StatusMessages:
+    type: "string"
+    description: "le code du message d'erreur\n"
+    enum:
+    - "MISSING_PARAMETERS"
+    - "INVALID_PARAMETERS"
+    - "INVALID_REQUEST"
+    - "UNEXCEPTED_ERROR"
+  ContentType:
+    type: "string"
+    description: "le mime type de l'email (text/html ou text/plain ou autre)\n"
+    enum:
+    - "text/html"
+    - "text/plain"
+  Email:
+    type: "object"
+    required:
+    - "body"
+    - "content_type"
+    - "receiver"
+    - "subject"
+    properties:
+      receiver:
+        $ref: "#/definitions/ContactEmail"
+      subject:
+        type: "string"
+        description: "le sujet de l'email\n"
+      content_type:
+        $ref: "#/definitions/ContentType"
+      body:
+        type: "string"
+        description: "le contenu de l'email\n"
+      attachments:
+        type: "array"
+        items:
+          $ref: "#/definitions/Attachment"
+      sender:
+        $ref: "#/definitions/ContactEmail"
+      reply_to:
+        $ref: "#/definitions/ContactEmail"
+      inline_image:
+        type: "boolean"
+  EmailBulk:
+    type: "object"
+    required:
+    - "body"
+    - "content_type"
+    - "receivers"
+    - "subject"
+    properties:
+      receivers:
+        type: "array"
+        items:
+          $ref: "#/definitions/ContactEmail"
+      subject:
+        type: "string"
+        description: "le sujet de l'email\n"
+      content_type:
+        $ref: "#/definitions/ContentType"
+      body:
+        type: "string"
+        description: "le contenu de l'email\n"
+      attachments:
+        type: "array"
+        items:
+          $ref: "#/definitions/Attachment"
+      sender:
+        $ref: "#/definitions/ContactEmail"
+      reply_to:
+        $ref: "#/definitions/ContactEmail"
+      inline_image:
+        type: "boolean"
+  Attachment:
+    type: "object"
+    required:
+    - "name"
+    - "uri"
+    properties:
+      name:
+        type: "string"
+        description: "nom de l'attachement\n"
+      uri:
+        type: "string"
+        description: "url de l'attachement\n"
+  ContactEmail:
+    type: "object"
+    required:
+    - "emailaddress"
+    properties:
+      emailaddress:
+        type: "string"
+        description: "address du contact\n"
+      name:
+        type: "string"
+        description: "name du contact"
+    description: "l'email du contact\n"
